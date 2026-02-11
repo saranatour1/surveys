@@ -2,10 +2,12 @@ import { Link, createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { DateTime } from 'luxon';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { AdminShell } from '@/components/admin-shell';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -319,36 +321,48 @@ function AnswerDistributionChart({ field }: { field: AnswerBreakdown }) {
     return <p className="text-muted-foreground text-xs/relaxed">No buckets to display for this field.</p>;
   }
 
-  const maxCount = Math.max(...field.buckets.map((bucket) => bucket.count), 1);
+  const chartData = field.buckets.map((bucket) => ({
+    label: bucket.label,
+    count: bucket.count,
+    percent: bucket.percent,
+  }));
+
+  const chartConfig = {
+    count: {
+      label: 'Count',
+      color: 'var(--color-chart-1)',
+    },
+  } satisfies ChartConfig;
 
   return (
-    <div className="space-y-2">
-      {field.buckets.map((bucket, index) => {
-        const widthPercent = bucket.count === 0 ? 2 : Math.max(6, (bucket.count / maxCount) * 100);
-        const hueStart = (index * 37) % 360;
-        const hueEnd = (hueStart + 35) % 360;
-
-        return (
-          <div key={`${field.fieldId}_${bucket.key}`} className="space-y-1">
-            <div className="flex items-center justify-between gap-2 text-xs/relaxed">
-              <span className="truncate">{bucket.label}</span>
-              <span className="text-muted-foreground shrink-0">
-                {bucket.count} ({bucket.percent.toFixed(2)}%)
-              </span>
-            </div>
-            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-              <div
-                className="h-2 rounded-full transition-all duration-300"
-                style={{
-                  width: `${widthPercent}%`,
-                  background: `linear-gradient(90deg, hsl(${hueStart} 76% 46%), hsl(${hueEnd} 72% 56%))`,
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <ChartContainer config={chartConfig} className="h-[300px] w-full">
+      <BarChart data={chartData} margin={{ left: 4, right: 8, top: 8, bottom: 8 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis
+          dataKey="label"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          interval={0}
+          angle={field.buckets.length > 6 ? -20 : 0}
+          textAnchor={field.buckets.length > 6 ? 'end' : 'middle'}
+          height={field.buckets.length > 6 ? 52 : 32}
+        />
+        <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+        <ChartTooltip
+          cursor={{ fill: 'var(--muted)' }}
+          content={
+            <ChartTooltipContent
+              formatter={(value, _name, item) => {
+                const row = item.payload as { percent?: number };
+                return `${value} (${(row.percent ?? 0).toFixed(2)}%)`;
+              }}
+            />
+          }
+        />
+        <Bar dataKey="count" fill="var(--color-count)" radius={[6, 6, 0, 0]} />
+      </BarChart>
+    </ChartContainer>
   );
 }
 
