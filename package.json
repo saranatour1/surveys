@@ -1,0 +1,72 @@
+{
+  "name": "surveys",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/workos/template-convex-tanstack-start-authkit/#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/workos/template-convex-tanstack-start-authkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/workos/template-convex-tanstack-start-authkit/issues"
+  },
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:frontend dev:backend",
+    "dev:frontend": "vite dev",
+    "dev:backend": "convex dev",
+    "predev": "convex dev --until-success",
+    "build": "vite build",
+    "start": "vite start",
+    "format": "prettier --write .",
+    "lint": "tsc && eslint .  --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.1.0",
+    "@convex-dev/react-query": "^0.1.0",
+    "@fontsource-variable/public-sans": "^5.2.7",
+    "@phosphor-icons/react": "^2.1.10",
+    "@posthog/react": "^1.7.1",
+    "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-router": "^1.158.1",
+    "@tanstack/react-router-ssr-query": "^1.158.1",
+    "@tanstack/react-start": "^1.158.3",
+    "@workos/authkit-tanstack-react-start": "0.5.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "convex": "^1.31.7",
+    "convex-helpers": "^0.1.111",
+    "luxon": "^3.7.2",
+    "posthog-js": "^1.345.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "shadcn": "^3.8.4",
+    "tailwind-merge": "^3.4.0",
+    "tw-animate-css": "^1.4.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@convex-dev/eslint-plugin": "^1.1.1",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@tanstack/eslint-config": "^0.3.4",
+    "@tanstack/react-router-devtools": "^1.158.1",
+    "@types/node": "^24.10.11",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.3",
+    "dotenv": "^17.2.4",
+    "npm-run-all2": "^8.0.4",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-tsconfig-paths": "^6.0.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@tailwindcss/oxide"
+    ]
+  }
+}
