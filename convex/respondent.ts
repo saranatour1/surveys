@@ -500,6 +500,11 @@ export const submitSession = mutation({
       grading,
     });
 
+    const generatedApi = (await import('./_generated/api')) as any;
+    await ctx.scheduler.runAfter(0, generatedApi.internal.analytics.incrementalIngestResponse, {
+      responseId,
+    });
+
     await ctx.db.patch(session._id, {
       status: 'completed',
       completedAt: now,

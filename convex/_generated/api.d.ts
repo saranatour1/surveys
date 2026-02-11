@@ -11,7 +11,9 @@
 import type * as analytics from "../analytics.js";
 import type * as audit from "../audit.js";
 import type * as crons from "../crons.js";
+import type * as devSeed from "../devSeed.js";
 import type * as invites from "../invites.js";
+import type * as lib_analytics_materialization from "../lib/analytics_materialization.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_domain from "../lib/domain.js";
@@ -36,7 +38,9 @@ declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
   audit: typeof audit;
   crons: typeof crons;
+  devSeed: typeof devSeed;
   invites: typeof invites;
+  "lib/analytics_materialization": typeof lib_analytics_materialization;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
   "lib/domain": typeof lib_domain;

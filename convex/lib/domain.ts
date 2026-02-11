@@ -43,6 +43,38 @@ export async function bumpDailyMetric(
   } else {
     await ctx.db.patch(existing._id, patch);
   }
+
+  // Keep analytics rollups warm for near real-time dashboard reads.
+  const analyticsExisting = await ctx.db
+    .query('surveyAnalyticsDaily')
+    .withIndex('by_survey_and_date', (q) => q.eq('surveyId', args.surveyId).eq('dateKey', dateKey))
+    .unique();
+
+  const analyticsBase = analyticsExisting ?? {
+    surveyId: args.surveyId,
+    dateKey,
+    started: 0,
+    completed: 0,
+    idle: 0,
+    abandoned: 0,
+    reactivated: 0,
+    avgScorePercent: 0,
+    totalGraded: 0,
+    updatedAt: timestamp,
+  };
+
+  const analyticsNextValue = (analyticsBase[args.metric] ?? 0) + delta;
+  const analyticsPatch = {
+    ...analyticsBase,
+    [args.metric]: Math.max(analyticsNextValue, 0),
+    updatedAt: timestamp,
+  };
+
+  if (!analyticsExisting) {
+    await ctx.db.insert('surveyAnalyticsDaily', analyticsPatch);
+  } else {
+    await ctx.db.patch(analyticsExisting._id, analyticsPatch);
+  }
 }
 
 export async function writeTransition(

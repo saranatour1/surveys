@@ -27,6 +27,31 @@ type SurveyRow = {
   updatedAt: number;
 };
 
+type SeedSurveyRow = {
+  surveyId: string;
+  slug: string;
+  title: string;
+  inviteToken: string;
+  startedCount: number;
+  completedCount: number;
+  idleCount: number;
+  abandonedCount: number;
+  inProgressCount: number;
+};
+
+type SeedResult = {
+  owner: {
+    appUserId: string;
+    email: string;
+    role: 'admin' | 'member';
+  };
+  createdSurveyCount: number;
+  createdSessionCount: number;
+  createdResponseCount: number;
+  surveys: SeedSurveyRow[];
+  seededAt: number;
+};
+
 function statusVariant(status: SurveyRow['status']) {
   switch (status) {
     case 'published':
@@ -49,10 +74,15 @@ function SurveysPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [bootstrapping, setBootstrapping] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedError, setSeedError] = useState<string | null>(null);
+  const [seedStatus, setSeedStatus] = useState<string | null>(null);
+  const [seedResult, setSeedResult] = useState<SeedResult | null>(null);
 
   const bootstrapUser = useMutation(convexApi.users.upsertCurrentUser);
   const currentUser = useQuery(convexApi.users.getCurrentUser, {}) as { role: string; email: string } | null | undefined;
   const createSurvey = useMutation(convexApi.surveys.createSurvey);
+  const seedSurveyFixtures = useMutation(convexApi.devSeed.seedMySurveyFixtures);
   const canCreate = !!currentUser && !creating;
 
   const surveys = useQuery(convexApi.surveys.listSurveys, currentUser ? {} : 'skip') as SurveyRow[] | undefined;
@@ -151,6 +181,44 @@ function SurveysPage() {
     }
   };
 
+  const onSeedFixtures = async () => {
+    setSeedError(null);
+    setSeedStatus(null);
+
+    if (seeding) {
+      setSeedStatus('Seeding is already in progress.');
+      return;
+    }
+
+    if (!currentUser) {
+      setSeedError('Account profile still initializing. Please wait, then retry.');
+      return;
+    }
+
+    setSeeding(true);
+    try {
+      const result = (await seedSurveyFixtures({
+        surveyCount: 3,
+        sessionsPerSurvey: 36,
+      })) as SeedResult;
+
+      setSeedResult(result);
+      setSeedStatus(
+        `Seeded ${result.createdSurveyCount} surveys with ${result.createdSessionCount} sessions and ${result.createdResponseCount} responses.`,
+      );
+
+      posthogCapture('survey_seed_data_created', {
+        surveyCount: result.createdSurveyCount,
+        sessionCount: result.createdSessionCount,
+        responseCount: result.createdResponseCount,
+      });
+    } catch (error) {
+      setSeedError(extractErrorMessage(error));
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (normalizedPathname !== '/surveys') {
     return <Outlet />;
   }
@@ -211,6 +279,8 @@ function SurveysPage() {
                 />
               </Field>
               {createError ? <p className="text-destructive text-xs/relaxed">{createError}</p> : null}
+              {seedError ? <p className="text-destructive text-xs/relaxed">{seedError}</p> : null}
+              {seedStatus ? <p className="text-emerald-700 text-xs/relaxed">{seedStatus}</p> : null}
               <p className="text-muted-foreground text-xs/relaxed">
                 Profile status: {bootstrapping ? 'initializing...' : currentUser ? 'ready' : 'missing'}
               </p>
@@ -222,7 +292,34 @@ function SurveysPage() {
               <Button type='submit'>
                 {creating ? 'Creating...' : 'Create Survey'}
               </Button>
+              <Button type="button" variant="outline" onClick={() => void onSeedFixtures()}>
+                {seeding ? 'Seeding...' : 'Seed Test Data (3 Surveys)'}
+              </Button>
             </form>
+            {seedResult ? (
+              <div className="mt-3 space-y-2 rounded-md border p-2">
+                <p className="text-xs font-medium">Latest Seed Run</p>
+                {seedResult.surveys.map((row) => (
+                  <div key={row.surveyId} className="space-y-1 text-xs">
+                    <p className="font-medium">{row.title}</p>
+                    <p className="text-muted-foreground">
+                      started={row.startedCount} completed={row.completedCount} idle={row.idleCount} abandoned={row.abandonedCount}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Link to="/builder/$surveyId" params={{ surveyId: row.surveyId }}>
+                        <Button variant="outline" size="sm">Builder</Button>
+                      </Link>
+                      <Link to="/surveys/$surveyId/analytics" params={{ surveyId: row.surveyId }}>
+                        <Button variant="outline" size="sm">Analytics</Button>
+                      </Link>
+                      <a className="text-xs underline" href={`/s/${row.inviteToken}`} target="_blank" rel="noreferrer">
+                        Open Invite Link
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 

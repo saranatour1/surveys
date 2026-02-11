@@ -10,6 +10,8 @@ import {
   surveyFieldValidator,
   surveySettingsValidator,
   surveyStatusValidator,
+  textInsightPhraseValidator,
+  textInsightSnippetValidator,
 } from './lib/validators';
 
 export default defineSchema({
@@ -119,6 +121,55 @@ export default defineSchema({
     reactivated: v.number(),
     updatedAt: v.number(),
   }).index('by_survey_and_date', ['surveyId', 'dateKey']),
+
+  surveyAnalyticsDaily: defineTable({
+    surveyId: v.id('surveys'),
+    dateKey: v.string(),
+    started: v.number(),
+    completed: v.number(),
+    idle: v.number(),
+    abandoned: v.number(),
+    reactivated: v.number(),
+    avgScorePercent: v.number(),
+    totalGraded: v.number(),
+    updatedAt: v.number(),
+  }).index('by_survey_and_date', ['surveyId', 'dateKey']),
+
+  surveyFieldAnalyticsDaily: defineTable({
+    surveyId: v.id('surveys'),
+    fieldId: v.string(),
+    dateKey: v.string(),
+    reachedCount: v.number(),
+    answeredCount: v.number(),
+    dropoffCount: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_survey_field_and_date', ['surveyId', 'fieldId', 'dateKey'])
+    .index('by_survey_and_date', ['surveyId', 'dateKey']),
+
+  surveyAnswerBucketsDaily: defineTable({
+    surveyId: v.id('surveys'),
+    fieldId: v.string(),
+    dateKey: v.string(),
+    bucketKey: v.string(),
+    bucketLabel: v.string(),
+    count: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_survey_field_date', ['surveyId', 'fieldId', 'dateKey'])
+    .index('by_survey_field_bucket', ['surveyId', 'fieldId', 'bucketKey'])
+    .index('by_survey_and_date', ['surveyId', 'dateKey']),
+
+  surveyTextInsightsDaily: defineTable({
+    surveyId: v.id('surveys'),
+    fieldId: v.string(),
+    dateKey: v.string(),
+    topPhrases: v.array(textInsightPhraseValidator),
+    sampledSnippets: v.array(textInsightSnippetValidator),
+    updatedAt: v.number(),
+  })
+    .index('by_survey_field_and_date', ['surveyId', 'fieldId', 'dateKey'])
+    .index('by_survey_and_date', ['surveyId', 'dateKey']),
 
   analyticsOutbox: defineTable({
     eventName: v.string(),

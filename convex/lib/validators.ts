@@ -100,6 +100,16 @@ export const responseGradingValidator = v.object({
   fieldResults: v.record(v.string(), v.object({ isCorrect: v.boolean() })),
 });
 
+export const textInsightPhraseValidator = v.object({
+  phrase: v.string(),
+  count: v.number(),
+});
+
+export const textInsightSnippetValidator = v.object({
+  snippet: v.string(),
+  count: v.number(),
+});
+
 export const posthogOutboxStatusValidator = v.union(v.literal('pending'), v.literal('sent'), v.literal('failed'));
 
 export const dailyMetricNameValidator = v.union(
